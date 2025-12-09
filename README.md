@@ -42,6 +42,8 @@ cp .env.example .env
 python main.py
 ```
 
+Or if you're on pycharm click run
+
 3. Find your rendered output in `render.png`
 
 ## Configuration
