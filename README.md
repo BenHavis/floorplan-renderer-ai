@@ -42,39 +42,77 @@ cp .env.example .env
 python main.py
 ```
 
-Or if you're on pycharm click run
+# Floorplan to Render
 
-3. Find your rendered output in `render.png`
+Convert architectural floorplans into photorealistic interior renderings using Google's Gemini image generation API.
 
-## Configuration
+## Overview
 
-Edit the prompt in `main.py` to customize the output style:
+This project uses Gemini's multimodal capabilities to interpret 2D architectural blueprints and generate photorealistic interior renders. The model infers spatial relationships, room layouts, window placement, and lighting to produce stylized visualizations.
 
-```python
-prompt = """
-Convert this architectural floorplan into a photorealistic interior rendering.
-Infer room layout, wall positions, window placement, and lighting direction.
-Use a clean Scandinavian modern style. Render in perspective (3/4 angle) if possible.
-"""
+## Features
+
+- Accepts standard floorplan images (PNG, JPG)
+- Generates photorealistic interior renders in 16:9 aspect ratio
+- Configurable design styles (default: Scandinavian modern)
+- Perspective rendering with inferred lighting
+
+## Requirements
+
+- Python 3.9+
+- Google Gemini API access (set `GEMINI_API_KEY`)
+
+## Installation
+
+Create and activate a virtual environment, then install dependencies:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### Supported Styles
+Create a `.env` file containing your Gemini API key:
 
-- Scandinavian modern (default)
-- Mid-century modern
-- Industrial loft
-- Minimalist Japanese
-- Contemporary luxury
+```bash
+# .env
+GEMINI_API_KEY=your_api_key_here
+```
 
-## API Reference
+Optionally copy from an example file if present:
 
-This project uses the `gemini-3-pro-image-preview` model. See [Google AI Studio](https://aistudio.google.com/) for API key setup and documentation.
+```bash
+cp .env.example .env
+# then edit .env to add your key
+```
 
-## Limitations
+## Usage
 
-- Output quality depends on floorplan clarity and detail
-- Complex multi-story layouts may produce inconsistent results
-- Model interprets ambiguous elements based on training data
+1. Place your floorplan image in the project directory as `blueprint.png` (or update `main.py` to load a different filename).
+2. Run the script:
+
+```bash
+python main.py
+```
+
+3. The rendered output will be saved to `render.png` if generation succeeds.
+
+## Quick Notes
+
+- The script expects `blueprint.png` to be present in the working directory.
+- If the Gemini client fails, ensure `GEMINI_API_KEY` is correct and network access is available.
+- Adjust `ANALYSIS_MODEL` and `IMAGE_MODEL` in `main.py` if you want different Gemini models.
+
+## Configuration and Customization
+
+- Styles are defined in `main.py` under the `STYLES` dictionary; you can add or modify entries.
+- Prompts for analysis and rendering are in `analyze_floorplan` and `generate_render` respectively — tweak them for different visual outcomes.
+
+## Next Steps / Suggestions
+
+- Add a CLI wrapper (argparse) to pass input/output filenames and style choices.
+- Add `tests/` with basic unit tests and a GitHub Actions workflow to run them.
+- Add an `examples/` folder with a sample `blueprint.png` for quick demos.
 
 ## License
 
