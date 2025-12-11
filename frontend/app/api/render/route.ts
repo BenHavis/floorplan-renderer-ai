@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+
+
 import { NextRequest, NextResponse } from "next/server";
 
 // Always use your deployed backend URL
