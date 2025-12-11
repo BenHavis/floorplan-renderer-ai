@@ -1,33 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
+// Always use your deployed backend URL
+const BACKEND_URL = "https://floorplan-renderer-ai-production.up.railway.app";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    
-    // Forward the request to FastAPI backend
+
+    // Forward blueprint + style to FastAPI backend
     const response = await fetch(`${BACKEND_URL}/generate`, {
       method: "POST",
       body: formData,
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json().catch(() => ({ error: "Unknown error" }));
       return NextResponse.json(error, { status: response.status });
     }
 
-    // Return the image blob
+    // Return image back to browser
     const blob = await response.blob();
+
     return new NextResponse(blob, {
-      headers: {
-        "Content-Type": "image/png",
-      },
+      headers: { "Content-Type": "image/png" },
     });
+
   } catch (error) {
     console.error("Render error:", error);
     return NextResponse.json(
-      { error: "Failed to connect to rendering service" },
+      { error: "Failed to reach backend service" },
       { status: 500 }
     );
   }
