@@ -1,8 +1,0 @@
-{
-  "functions": {
-    "app/api/render/route.ts": {
-      "maxBodySize": "10mb",
-      "maxDuration": 60
-    }
-  }
-}
