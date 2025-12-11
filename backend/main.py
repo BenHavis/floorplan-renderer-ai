@@ -5,17 +5,14 @@ from google import genai
 from google.genai import types
 from PIL import Image
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
-API_KEY = os.getenv("GEMINI_API_KEY")
-
-client = genai.Client(api_key=API_KEY)
+# Don't use dotenv in production - Railway sets env vars directly
+# from dotenv import load_dotenv
+# load_dotenv()
 
 ANALYSIS_MODEL = "gemini-2.5-pro"
 IMAGE_MODEL = "gemini-3-pro-image-preview"
 
-# Style lookup table (backend keeps your original descriptions)
 STYLES = {
     "1": ("Scandinavian Modern", "clean lines, light wood, white walls, minimal decor, natural light"),
     "2": ("Mid-Century Modern", "warm woods, organic shapes, vintage furniture, bold accent colors"),
@@ -29,17 +26,24 @@ STYLES = {
 
 app = FastAPI()
 
-# Allow Next.js frontend to call backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten later
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-def analyze_floorplan(image: Image.Image) -> str:
+def get_client():
+    """Lazy initialization of the Gemini client."""
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not set")
+    return genai.Client(api_key=api_key)
+
+
+def analyze_floorplan(client, image: Image.Image) -> str:
     """Use Gemini's text model to extract spatial info."""
     analysis_prompt = """
 Analyze this architectural floorplan and provide a detailed spatial description.
@@ -54,12 +58,10 @@ Extract and describe:
 
 Be precise about what IS and IS NOT open concept.
 """
-
     response = client.models.generate_content(
         model=ANALYSIS_MODEL,
         contents=[analysis_prompt, image]
     )
-
     return response.text
 
 
@@ -69,21 +71,20 @@ async def generate_interior(
     style_number: str = Form(...)
 ):
     """Main endpoint: upload blueprint + choose style number."""
-
-    # Validate style
+    
     if style_number not in STYLES:
         return JSONResponse({"error": "Invalid style selection"}, status_code=400)
 
     style_name, style_desc = STYLES[style_number]
     full_style_prompt = f"{style_name} style — {style_desc}"
 
-    # Load image from upload
     blueprint = Image.open(file.file)
+    
+    # Get client when needed
+    client = get_client()
 
-    # Step 1 — analyze plan
-    analysis_text = analyze_floorplan(blueprint)
+    analysis_text = analyze_floorplan(client, blueprint)
 
-    # Step 2 — generate render
     render_prompt = f"""
 Based on this floorplan and spatial analysis, generate a photorealistic interior render.
 
@@ -110,7 +111,6 @@ INTERIOR STYLE: {full_style_prompt}
         )
     )
 
-    # Save output
     output_path = "render.png"
 
     for part in response.parts:
