@@ -1,3 +1,6 @@
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from google import genai
 from google.genai import types
 from PIL import Image
@@ -6,12 +9,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
+
 client = genai.Client(api_key=API_KEY)
 
-# Two models: one for spatial analysis, one for image generation
 ANALYSIS_MODEL = "gemini-2.5-pro"
 IMAGE_MODEL = "gemini-3-pro-image-preview"
 
+# Style lookup table (backend keeps your original descriptions)
 STYLES = {
     "1": ("Scandinavian Modern", "clean lines, light wood, white walls, minimal decor, natural light"),
     "2": ("Mid-Century Modern", "warm woods, organic shapes, vintage furniture, bold accent colors"),
@@ -23,85 +27,80 @@ STYLES = {
     "8": ("Rustic Farmhouse", "reclaimed wood, vintage fixtures, cozy textiles, warm neutrals"),
 }
 
-def display_styles():
-    print("\n🎨 Available Interior Styles:\n")
-    for key, (name, desc) in STYLES.items():
-        print(f"  [{key}] {name}")
-        print(f"      {desc}\n")
+app = FastAPI()
 
-def get_style_choice():
-    display_styles()
-    print("  [C] Custom - describe your own style\n")
-    
-    choice = input("Select a style (1-8) or C for custom: ").strip().upper()
-    
-    if choice == "C":
-        custom = input("Describe your desired style: ").strip()
-        return f"custom style: {custom}"
-    elif choice in STYLES:
-        name, desc = STYLES[choice]
-        return f"{name} style with {desc}"
-    else:
-        print("Invalid choice, defaulting to Scandinavian Modern")
-        return f"{STYLES['1'][0]} style with {STYLES['1'][1]}"
+# Allow Next.js frontend to call backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # tighten later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-def analyze_floorplan(blueprint):
-    """Use Gemini's text model to extract spatial information from floorplan."""
-    
+
+def analyze_floorplan(image: Image.Image) -> str:
+    """Use Gemini's text model to extract spatial info."""
     analysis_prompt = """
 Analyze this architectural floorplan and provide a detailed spatial description.
 
 Extract and describe:
-1. ROOM LIST: Each room with its name, approximate square footage, and shape
-2. WALL LAYOUT: Which rooms share walls, where solid walls separate spaces
-3. OPENINGS: Door locations, archways, open passages between rooms
-4. WINDOWS: Window positions and which direction they likely face
-5. KITCHEN/BATH: Note appliance positions, fixture locations
-6. SPATIAL FLOW: How rooms connect, what you'd see from each doorway
+1. ROOM LIST with approx square footage
+2. WALL LAYOUT and room adjacency
+3. OPENINGS and door placements
+4. WINDOWS and probable directions
+5. KITCHEN/BATH appliance/fixture positions
+6. SPATIAL FLOW and how rooms connect
 
-Be precise about what IS and IS NOT open concept. If rooms have walls between them, say so explicitly.
-
-Format as a detailed scene description that could guide an interior rendering.
+Be precise about what IS and IS NOT open concept.
 """
-    
+
     response = client.models.generate_content(
         model=ANALYSIS_MODEL,
-        contents=[analysis_prompt, blueprint]
+        contents=[analysis_prompt, image]
     )
-    
+
     return response.text
 
-def generate_render(style: str):
-    blueprint = Image.open("blueprint.png")
-    
-    # Step 1: Analyze the floorplan
-    print("\n🔍 Analyzing floorplan layout...")
-    spatial_analysis = analyze_floorplan(blueprint)
-    print("\n📐 Spatial Analysis:")
-    print("-" * 40)
-    print(spatial_analysis)
-    print("-" * 40)
-    
-    # Step 2: Generate image using the analysis
+
+@app.post("/generate")
+async def generate_interior(
+    file: UploadFile = File(...),
+    style_number: str = Form(...)
+):
+    """Main endpoint: upload blueprint + choose style number."""
+
+    # Validate style
+    if style_number not in STYLES:
+        return JSONResponse({"error": "Invalid style selection"}, status_code=400)
+
+    style_name, style_desc = STYLES[style_number]
+    full_style_prompt = f"{style_name} style — {style_desc}"
+
+    # Load image from upload
+    blueprint = Image.open(file.file)
+
+    # Step 1 — analyze plan
+    analysis_text = analyze_floorplan(blueprint)
+
+    # Step 2 — generate render
     render_prompt = f"""
 Based on this floorplan and spatial analysis, generate a photorealistic interior render.
 
-SPATIAL ANALYSIS OF THIS FLOORPLAN:
-{spatial_analysis}
+SPATIAL ANALYSIS:
+{analysis_text}
 
-CRITICAL RENDERING RULES:
-- Follow the wall positions described above exactly
-- Rooms that are described as separate must have visible walls between them
-- Room proportions must match the square footage analysis
-- Do not default to open concept unless the analysis confirms open passages
-- Ceiling height: 9ft standard
-- Camera: 3/4 perspective showing the main living areas
+RENDER RULES:
+- Follow wall positions accurately
+- Maintain room proportions
+- No open concept unless analysis confirms it
+- Show realistic Scandinavian/MidCentury/etc style as defined
+- Camera: 3/4 perspective
+- Ceiling: 9 ft
 
-INTERIOR STYLE: {style}
-
-Generate a photorealistic render that accurately reflects THIS specific floorplan's layout.
+INTERIOR STYLE: {full_style_prompt}
 """
-    
+
     response = client.models.generate_content(
         model=IMAGE_MODEL,
         contents=[render_prompt, blueprint],
@@ -110,18 +109,14 @@ Generate a photorealistic render that accurately reflects THIS specific floorpla
             image_config=types.ImageConfig(aspect_ratio="16:9")
         )
     )
-    
-    for part in response.parts:
-        image = part.as_image()
-        if image:
-            image.save("render.png")
-            print("\n✅ Saved render to render.png")
-            return True
-    
-    print("❌ No image generated")
-    return False
 
-if __name__ == "__main__":
-    style = get_style_choice()
-    print(f"\n🏠 Generating render with {style}...")
-    generate_render(style)
+    # Save output
+    output_path = "render.png"
+
+    for part in response.parts:
+        img = part.as_image()
+        if img:
+            img.save(output_path)
+            return FileResponse(output_path, media_type="image/png")
+
+    return JSONResponse({"error": "Image generation failed"}, status_code=500)
