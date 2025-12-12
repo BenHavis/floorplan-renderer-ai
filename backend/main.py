@@ -10,7 +10,7 @@ import os
 # from dotenv import load_dotenv
 # load_dotenv()
 
-ANALYSIS_MODEL = "gemini-2.5-pro"
+ANALYSIS_MODEL = "gemini-2.5-flash"
 IMAGE_MODEL = "gemini-3-pro-image-preview"
 
 STYLES = {
