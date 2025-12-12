@@ -159,6 +159,26 @@ export default function HomePage() {
   // Show upload view before render
   return (
     <div className={styles.container}>
+      <div className={styles.heroExample}>
+        <div className={styles.heroImageContainer}>
+          <img
+            src="/blueprint-before.png"
+            alt="Before: Blueprint"
+            className={styles.heroImage}
+          />
+          <span className={styles.heroLabel}>Blueprint</span>
+        </div>
+        <div className={styles.heroArrow}>→</div>
+        <div className={styles.heroImageContainer}>
+          <img
+            src="/blueprint-after.png"
+            alt="After: Art Deco Render"
+            className={styles.heroImage}
+          />
+          <span className={styles.heroLabel}>Art Deco</span>
+        </div>
+      </div>
+
       <Card className={styles.card}>
         <div className={styles.title}>Space Reimagined</div>
         <div className={styles.subtitle}>
