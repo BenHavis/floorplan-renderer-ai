@@ -1,9 +1,11 @@
 .container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   background: #0a0a0a;
+  padding: 40px 20px;
 }
 
 .card {
@@ -113,4 +115,37 @@
 .resultsActions {
   display: flex;
   gap: 8px;
+}
+
+.heroExample {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.heroImageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.heroImage {
+  width: 200px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.heroArrow {
+  font-size: 28px;
+  color: #666;
+}
+
+.heroLabel {
+  font-size: 13px;
+  color: #9ca3af;
 }
