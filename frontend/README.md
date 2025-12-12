@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Space Reimagined - Frontend
+
+Upload a floorplan or room photo and see it transformed into any interior style using AI.
+
+## Features
+
+- Upload any floorplan or room image
+- Choose from 8 interior styles (Scandinavian, Mid-Century Modern, Industrial, etc.)
+- Get photorealistic renders powered by Google Gemini
+- Side-by-side before/after comparison
+- Download rendered images
+
+## Tech Stack
+
+- Next.js 14 (App Router)
+- TypeScript
+- Ant Design
+- CSS Modules
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+
+- Backend server running (see `/backend` folder)
+
+### Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file:
+```
+BACKEND_URL=http://localhost:8000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Run Development Server
+```bash
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
+```
+frontend/
+├── app/
+│   ├── api/render/      # API route (proxies to backend)
+│   ├── page.tsx         # Main page component
+│   ├── page.module.css  # Styles
+│   └── layout.tsx       # Root layout
+├── public/
+│   ├── blueprint-before.png  # Example images
+│   └── blueprint-after.png
+└── package.json
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deployed on [Vercel](https://vercel.com). Set `BACKEND_URL` environment variable to your production backend URL.
