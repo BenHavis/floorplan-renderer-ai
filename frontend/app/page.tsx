@@ -65,7 +65,7 @@ export default function HomePage() {
 
   const handleSubmit = async () => {
     if (!file) {
-      message.error("You must upload a blueprint first.");
+      message.error("Please upload an image first.");
       return;
     }
 
@@ -111,9 +111,9 @@ export default function HomePage() {
     return (
       <div className={styles.container}>
         <Card className={cardClassName}>
-          <div className={styles.title}>Floorplan Renderer</div>
+          <div className={styles.title}>Space Reimagined</div>
           <div className={styles.subtitle}>
-            Your rendered floorplan is ready.
+            Your rendered space is ready.
           </div>
 
           <div className={styles.resultsHeader}>
@@ -130,11 +130,11 @@ export default function HomePage() {
           
           <div className={styles.comparisonGrid}>
             <div>
-              <div className={styles.comparisonLabel}>Blueprint</div>
+              <div className={styles.comparisonLabel}>Original</div>
               <div className={styles.comparisonImageFrame}>
                 <img
                   src={previewUrl}
-                  alt="Blueprint"
+                  alt="Original"
                   className={styles.comparisonImage}
                 />
               </div>
@@ -160,19 +160,19 @@ export default function HomePage() {
   return (
     <div className={styles.container}>
       <Card className={styles.card}>
-        <div className={styles.title}>Floorplan Renderer</div>
+        <div className={styles.title}>Space Reimagined</div>
         <div className={styles.subtitle}>
-          Upload a blueprint and choose an interior style.
+          Upload a floorplan or room photo. See it transformed into any style.
         </div>
 
-        <label className={styles.label}>Blueprint Image</label>
+        <label className={styles.label}>Image</label>
         
         {previewUrl ? (
           <div className={styles.previewContainer}>
             <div className={styles.imageFrame}>
               <img
                 src={previewUrl}
-                alt="Blueprint preview"
+                alt="Preview"
                 className={styles.previewImage}
               />
             </div>
@@ -193,7 +193,7 @@ export default function HomePage() {
             showUploadList={false}
             accept="image/*"
           >
-            <Button icon={<UploadOutlined />}>Choose Blueprint</Button>
+            <Button icon={<UploadOutlined />}>Upload Image</Button>
           </Upload>
         )}
 
@@ -210,7 +210,7 @@ export default function HomePage() {
         <div className={styles.spacerLarge} />
 
         <Button type="primary" block onClick={handleSubmit} loading={loading}>
-          {loading ? "Rendering..." : "Render Blueprint"}
+          {loading ? "Generating..." : "Generate Render"}
         </Button>
       </Card>
     </div>
